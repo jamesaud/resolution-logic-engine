@@ -1,0 +1,22 @@
+signature:
+  constants:
+    - Peter
+    - Adam
+    - Eve
+    - Eva
+
+  functions:
+    mother:
+      name: Mother!
+      arity: 1
+
+  relations:
+    friend:
+      name: Friend
+      arity: 2
+
+
+knowledge_base:
+  - "[Friend, [Friend, Peter, Adam], Adam]"
+  - "[Friend, Adam, Eve]"
+  - "[Mother!, Peter, Eva]"
