@@ -14,9 +14,15 @@ signature:
     friend:
       name: Friend
       arity: 2
+    enemy:
+      name: Enemy
+      arity: 2
 
 
 knowledge_base:
-  - "[Friend, [Friend, Peter, Adam], Adam]"
-  - "[Friend, Adam, Eve]"
-  - "[Mother!, Peter, Eva]"
+  facts:
+    - "[Friend, [Friend, Peter, Adam], Adam]"
+    - "[Friend, Adam, Eve]"
+    - "[Mother!, Peter, Eva]"
+  theories:
+    - "[exists, x, [and, [Friend, x], [Enemy, x]]]"

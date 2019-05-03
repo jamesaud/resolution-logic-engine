@@ -1,5 +1,6 @@
 
 include("signature.jl")
+include("logic_conversion.jl")
 
 FUNCTION_CHAR = '!'
 
@@ -22,7 +23,6 @@ end
 #####
 
 # Returns the constants, function names and arity, and relations and arity of the given expression
-# TODO: Add expressions
 function syntax(expression)
     constants =  Set{Constant}()
     relations = Set{Relation}()
