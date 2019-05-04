@@ -17,23 +17,52 @@ end
 
 function convert_expression(expression::Array)
     expand(expression) = @match expression begin
-        s::Symbol => return s
-        e::Array => return convert_expression(nnf(e))
+        s::Symbol => s
+        e::Array => convert_expression(nnf(e))
     end
 
-    # recur(expression) = @match expression begin
-    #     s::Symbol => return s
-    #     e::Array => return convert_expression(e)
-    # end
-
-    expression = map(expand, expression)
+    expression = map(expand, nnf(expression))
     return expression
 end
 
-function test_my(expression)
-    answer = convert_expression(expression)
-    println(answer)
+
+# Standardize Variables
+# Algorithm: anytime an existential quantifier is seen, change the variable
+# symbol_fn: function to get the next symbol
+function _standardize_variables(expression, variable_scope::Dict{Symbol, Symbol}, symbol_fn)
+    recur(expression) = _standardize_variables(expression, variable_scope, symbol_fn)
+    expand(exp) = @match exp begin
+        s::Symbol           => get(variable_scope, s, s)
+        [:exists, x, e]     => begin
+                                symbol = symbol_fn()
+                                variable_scope[x] = symbol
+                                [:exists, symbol, recur(e)]
+                               end
+        [:all, x, e]        => begin
+                                delete!(variable_scope, x)
+                                [:all, x, recur(e)]
+                                end
+        e::Array            => map(recur, e)
+    end
+    return expand(expression)
 end
+
+
+function standardize_expression(expression::Array)
+    variable_scope =  Dict{Symbol, Symbol}()
+    # Create new Symbol everytime the function is called
+    count = 0
+    function symbol_fn()
+        count += 1
+        return Symbol(count)
+    end
+    expression = _standardize_variables(expression, variable_scope, symbol_fn)
+    return expression
+end
+
+
+
+
 
 function expand_expression(expression)
     expand(exp) = @match expression begin

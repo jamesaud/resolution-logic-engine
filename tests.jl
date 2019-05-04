@@ -35,3 +35,15 @@ not_exists_nnf = [:exists, x, [:not, Px]]
 
 @test convert_expression([:and, implication, double_not]) ==
                          [:and, implication_nnf, double_not_nnf]
+
+@test convert_expression([:implies, [:implies, :P, :Q], :Q]) ==
+                         [:or, [:not, [:or, [:not, :P], :Q]], :Q]
+
+# Variable Replacement
+s = Symbol("1")
+
+exp = [:exists, :x, [:or, [:Friend, :x], [:Enemy, :x]]] # There is someone who's a friend or enemy of x
+@test standardize_expression(exp) == [:exists, s, [:or, [:Friend, s], [:Enemy, s]]]
+
+exp = [:exists, :x, [:all, :x, [:or, [:Friend, :x], [:Enemy, :x]]]]
+@test standardize_expression(exp) == [:exists, s, [:all, :x, [:or, [:Friend, :x], [:Enemy, :x]]]]
