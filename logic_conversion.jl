@@ -2,25 +2,49 @@ using Match
 
 
 # Converts simple expression to negation normal form
-function nnf(expression::Array)
+function _eliminate_implication(expression::Array)
     return @match expression begin
       [:implies, P, Q]                 => [:or, [:not, P], Q]
       [:double_implies, P, Q]          => [:and, [:or, P, [:not, Q]], [:or, [:not, P], Q]]
-      [:not, [:or, [P, Q]]]            => [:or, [:not, P], [:not, Q]]
-      [:not, [:and, [P, Q]]]           => [:or, [:not, P], [:not, Q]]
-      [:not, [:not, P]]                => P
-      [:not, [:all, x, Px]]            => [:all, x, [:not, Px]]
-      [:not, [:exists, x, Px]]         => [:exists, x, [:not, Px]]
       X                                => X
     end
 end
 
-function nnf_expression(expression::Array)
-    expand(expression) = @match expression begin
+function eliminate_implication(expression)
+    recur(expression) = @match expression begin
         s::Symbol => s
-        e::Array => nnf_expression(nnf(e))
+        e::Array => map(recur, _eliminate_implication(e))
     end
-    expression = map(expand, nnf(expression))
+    return recur(expression)
+end
+
+function _move_not_inward(expression::Array)
+    return @match expression begin
+        [:not, [:or, [P, Q]]]            => [:or, [:not, P], [:not, Q]]
+        [:not, [:and, [P, Q]]]           => [:or, [:not, P], [:not, Q]]
+        [:not, [:not, P]]                => P
+        [:not, [:all, x, Px]]            => [:all, x, [:not, Px]]
+        [:not, [:exists, x, Px]]         => [:exists, x, [:not, Px]]
+        X                                => X
+    end
+end
+
+function move_not_inward(expression)
+    recur(expression) = @match expression begin
+        s::Symbol => s
+        e::Array => map(recur, _move_not_inward(e))
+    end
+    return recur(expression)
+end
+
+function nnf(expression::Array)
+    expression = eliminate_implication(expression)
+
+    prev_exp = nothing
+    while expression != prev_exp
+        prev_exp = expression
+        expression = move_not_inward(expression)
+    end
     return expression
 end
 
@@ -31,17 +55,18 @@ end
 function _standardize_variables(expression, variable_scope::Dict{Symbol, Symbol}, symbol_fn)
     recur(expression) = _standardize_variables(expression, variable_scope, symbol_fn)
     expand(exp) = @match exp begin
-        s::Symbol           => get(variable_scope, s, s)
-        [:exists, x, e]     => begin
-                                symbol = symbol_fn()
-                                variable_scope[x] = symbol
-                                [:exists, symbol, recur(e)]
-                               end
-        [:all, x, e]        => begin
-                                delete!(variable_scope, x)
-                                [:all, x, recur(e)]
-                                end
-        e::Array            => map(recur, e)
+        s::Symbol                           => get(variable_scope, s, s)
+        [:exists, x, e]                     => begin
+                                                symbol = Symbol(string(x) * string(symbol_fn()))
+                                                variable_scope[x] = symbol
+                                                [:exists, symbol, recur(e)]
+                                               end
+        [:all, x, e]                        => begin
+                                                symbol = Symbol(string(x) * string(symbol_fn()))
+                                                variable_scope[x] = symbol
+                                                [:all, symbol, recur(e)]
+                                               end
+        e::Array                            => map(recur, e)
     end
     return expand(expression)
 end
@@ -73,11 +98,17 @@ end
 
 
 function move_quantifiers(expression::Array)
-    expand(expression) = @match expression begin
+    recur(expression) = @match expression begin
         s::Symbol => s
         e::Array => move_quantifiers(_move_quantifiers(e))
     end
-    expression = map(expand, _move_quantifiers(expression))
+
+    # Keep moving quanitifers outward if needed
+    prev_exp = nothing
+    while expression != prev_exp
+        prev_exp = expression
+        expression = map(recur, _move_quantifiers(prev_exp))
+    end
     return expression
 end
 
@@ -87,7 +118,7 @@ end
 # Replace variabels with f(variable_scope)
 # Variables maaps the existentional variable to a skolem function symbol
 function _skolem_function(expression, variable_scope::Array{Symbol}, variables::Dict{Symbol, Symbol}, symbol_fn)
-    recur(expression) = _skolem_function(expression, variable_scope, variables, symbol_fn)
+    recur(expression) = _skolem_function(expression, copy(variable_scope), copy(variables), symbol_fn)
     expand(exp) = @match exp begin
         s::Symbol           => begin
                                 if haskey(variables, s)
@@ -128,10 +159,54 @@ function skolem_function(expression)
 end
 
 
-function skolemize(expression)
-
+function drop_universal_quantifiers(expression)
+    return @match expression begin
+        s::Symbol           => s
+        [:all, x, e]        => drop_universal_quantifiers(e)
+        e                   => map(drop_universal_quantifiers, e)
+    end
 end
 
+
+function _distribute_or_and(expression)
+    recur(exp) = _distribute_or_and(exp)
+    return @match expression begin
+        s::Symbol               => s
+        [:or, P, [:and, Q, R]]  => recur([:and, [:or, P, Q], [:or, P, R]])
+        e                       => map(recur, e)
+    end
+end
+
+function distribute_or_and(expression)
+    prev_exp = nothing
+    while expression != prev_exp
+        prev_exp = expression
+        expression = _distribute_or_and(expression)
+    end
+    return expression
+end
+
+function conjunctive_normal_form(expression)
+    # 1: Negation Normal Form
+    expression = nnf(expression)
+    println("NNF: ", expression)
+
+    # 2: Standardize Variables
+    expression = standardize_expression(expression)
+
+    # 3: Skolemize the statement
+    expression = move_quantifiers(expression)
+    expression = skolem_function(expression)
+
+    # 4: Drop universal quanitfiers
+    expression = drop_universal_quantifiers(expression)
+
+    # 5: Distribute ors and ands
+    expression = distribute_or_and(expression)
+
+    return true
+    return expression
+end
 
 
 
