@@ -59,5 +59,8 @@ exp = [:exists, :x, [:all, :x, [:or, [:Friend, :x], [:Enemy, :x]]]]   # Make sur
 x = :x
 y = :y
 z = :z
-@test skolem_function([:all, x, [:exists, y, [:and, [:Animal, y], [:Loves, x, y]]]])
-@test skolem_function([:all, x, [:all, y, [:exists, z, [:and, [:Animal, z], [:Loves, x, z]]]]])
+@test skolem_function([:all, x, [:exists, y, [:and, [:Animal, y], [:Loves, x, y]]]]) ==
+                      [:all, :x, [:and, [:Animal, [Symbol("a()"), :x]], [:Loves, :x, [Symbol("a()"), :x]]]]
+                      
+@test skolem_function([:all, x, [:all, y, [:exists, z, [:and, [:Animal, z], [:Loves, x, z]]]]]) ==
+                      [:all, :x, [:all, :y, [:and, [:Animal, [Symbol("a()"), :x, :y]], [:Loves, :x, [Symbol("a()"), :x, :y]]]]]

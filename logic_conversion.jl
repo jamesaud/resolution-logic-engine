@@ -124,8 +124,7 @@ function skolem_function(expression)
     variables = Dict{Symbol, Symbol}()
     variable_scope = Symbol[]
     expression = _skolem_function(expression, variable_scope, variables, symbol_fn)
-    println(expression)
-    return true
+    return expression
 end
 
 
