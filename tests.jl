@@ -2,8 +2,8 @@ using Test
 using Juno
 include("logic_conversion.jl")
 
-P = [:and, :x, :y]
-Q = [:or, :x, :y]
+P = :P
+Q = :Q
 R = :R
 
 x = :x
@@ -12,26 +12,25 @@ Px = [:P, x]
 # Input
 implication = [:implies, P, Q]
 double_implication = [:double_implies, P, Q]
-demorgan_or = [:not, [:or, [P, Q]]]
-demogran_and = [:not, [:and, [P, Q]]]
+demorgan_or = [:not, [:or, P, Q]]
+demogran_and = [:not, [:and, P, Q]]
 double_not = [:not, [:not, P]]
-
 not_all = [:not, [:all, x, Px]]
 not_exists = [:not, [:exists, x, Px]]
 
 # Output of negation normal form
 implication_nnf = [:or, [:not, P], Q]
 double_implication_nnf = [:and, [:or, P, [:not, Q]], [:or, [:not, P], Q]]
-
-demorgan_or_nnf = [:or, [:not, P], [:not, Q]]
+demorgan_or_nnf = [:and, [:not, P], [:not, Q]]
 demogran_and_nnf = [:or, [:not, P], [:not, Q]]
 double_not_nnf = P
-not_all_nnf = [:all, x, [:not, Px]]
+not_all_nnf = [:exists, x, [:not, Px]]
 not_exists_nnf = [:exists, x, [:not, Px]]
 
 # Negation Normal Form
 @test eliminate_implication(implication) == implication_nnf
 @test eliminate_implication(double_implication) == double_implication_nnf
+@test eliminate_implication([:implies, [:implies, P, Q], Q]) == [:or, [:not, [:or, [:not, P], Q]], Q]
 @test move_not_inward(demorgan_or) == demorgan_or_nnf
 @test move_not_inward(demogran_and) == demogran_and_nnf
 @test move_not_inward(double_not) == double_not_nnf
@@ -41,8 +40,8 @@ not_exists_nnf = [:exists, x, [:not, Px]]
 @test nnf([:and, implication, double_not]) ==
                          [:and, implication_nnf, double_not_nnf]
 
-@test nnf([:implies, [:implies, :P, :Q], :Q]) ==
-                         [:or, [:not, [:or, [:not, :P], :Q]], :Q]
+@test nnf([:implies, [:implies, P, Q], Q]) ==
+                         [:or, [:and, P, [:not, Q]], Q]
 
 # Variable Replacement
 s = Symbol("x1")          # Symbol function iterates up from 1
@@ -87,6 +86,8 @@ x, y, z = :x, :y, :z
 
 
 # Final Conjunctive normal form test
+# found at: https://en.wikipedia.org/wiki/Conjunctive_normal_form
+# check skolem_process.jl for the full output at each step
 exp = [:all, x,
              [:implies, [:all, y,
                                [:implies, [:Animal, y],
@@ -94,10 +95,9 @@ exp = [:all, x,
                         [:exists, y,
                                   [:Loves, y, x]]]]
 
-@test conjunctive_normal_form(exp)
+out = [:and, [:or, [:Loves, [Symbol("b()"), :x1], :x1],
+             [:Animal, [Symbol("a()"), :x1]]],
+       [:or, [:Loves, [Symbol("b()"), :x1], :x1],
+             [:not, [:Loves, :x1, [Symbol("a()"), :x1]]]]]
 
-# [:or,
-#    [:not,
-#         [:or, [:not, Symbol[:Animal, :y2]],
-#               [:Loves, :x1, :y2]]],
-#    [:Loves, [Symbol("a()"), :x1], :x1]]
+@test conjunctive_normal_form(exp) == out

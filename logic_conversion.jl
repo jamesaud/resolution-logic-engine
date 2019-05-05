@@ -2,40 +2,35 @@ using Match
 
 
 # Converts simple expression to negation normal form
-function _eliminate_implication(expression::Array)
-    return @match expression begin
+function eliminate_implication(expression)
+    conversion = @match expression begin
       [:implies, P, Q]                 => [:or, [:not, P], Q]
       [:double_implies, P, Q]          => [:and, [:or, P, [:not, Q]], [:or, [:not, P], Q]]
       X                                => X
     end
-end
 
-function eliminate_implication(expression)
-    recur(expression) = @match expression begin
+    return @match conversion begin
         s::Symbol => s
-        e::Array => map(recur, _eliminate_implication(e))
-    end
-    return recur(expression)
-end
-
-function _move_not_inward(expression::Array)
-    return @match expression begin
-        [:not, [:or, [P, Q]]]            => [:or, [:not, P], [:not, Q]]
-        [:not, [:and, [P, Q]]]           => [:or, [:not, P], [:not, Q]]
-        [:not, [:not, P]]                => P
-        [:not, [:all, x, Px]]            => [:all, x, [:not, Px]]
-        [:not, [:exists, x, Px]]         => [:exists, x, [:not, Px]]
-        X                                => X
+        e::Array => map(eliminate_implication, e)
     end
 end
 
 function move_not_inward(expression)
-    recur(expression) = @match expression begin
-        s::Symbol => s
-        e::Array => map(recur, _move_not_inward(e))
+    conversion = @match expression begin
+        [:not, [:or, P, Q]]            => [:and, [:not, P], [:not, Q]]
+        [:not, [:and, P, Q]]           => [:or, [:not, P], [:not, Q]]
+        [:not, [:not, P]]                => P
+        [:not, [:all, x, Px]]            => [:exists, x, [:not, Px]]
+        [:not, [:exists, x, Px]]         => [:exists, x, [:not, Px]]
+        X                                => X
     end
-    return recur(expression)
+
+    return @match conversion begin
+        s::Symbol => s
+        e::Array => map(move_not_inward, e)
+    end
 end
+
 
 function nnf(expression::Array)
     expression = eliminate_implication(expression)
@@ -88,11 +83,11 @@ end
 # SKOLEMIZATION
 function _move_quantifiers(expression)
     return @match expression begin
-      [:and, P, [:all, x, [Q, x]]]    => [:all, x, [:and, P, [Q, x]]]
-      [:or, P, [:all, x, [Q, x]]]     => [:all, x, [:or, P, [Q, x]]]
-      [:and, P, [:exists, x, [Q, x]]] => [:exists, x, [:and, P, [Q, x]]]
-      [:or, P, [:exists, x, [Q, x]]]  => [:exists, x, [:or, P, [Q, x]]]
-      X                               => X
+      [:and, P, [:all, x, [Q, x]]]    || [:and, [:all, x, [Q, x]], P]    => [:all, x, [:and, P, [Q, x]]]
+      [:or, P, [:all, x, [Q, x]]]     || [:or, [:all, x, [Q, x]], P]     => [:all, x, [:or, P, [Q, x]]]
+      [:and, P, [:exists, x, [Q, x]]] || [:and, [:exists, x, [Q, x]], P] => [:exists, x, [:and, P, [Q, x]]]
+      [:or, P, [:exists, x, [Q, x]]]  || [:or, [:exists, x, [Q, x]], P]  => [:exists, x, [:or, P, [Q, x]]]
+      X                                    => X
     end
 end
 
@@ -171,9 +166,9 @@ end
 function _distribute_or_and(expression)
     recur(exp) = _distribute_or_and(exp)
     return @match expression begin
-        s::Symbol               => s
-        [:or, P, [:and, Q, R]]  => recur([:and, [:or, P, Q], [:or, P, R]])
-        e                       => map(recur, e)
+        s::Symbol                                        => s
+        [:or, P, [:and, Q, R]] || [:or, [:and, Q, R], P] => recur([:and, [:or, P, Q], [:or, P, R]])
+        e                                                => map(recur, e)
     end
 end
 
@@ -189,7 +184,6 @@ end
 function conjunctive_normal_form(expression)
     # 1: Negation Normal Form
     expression = nnf(expression)
-    println("NNF: ", expression)
 
     # 2: Standardize Variables
     expression = standardize_expression(expression)
@@ -204,10 +198,8 @@ function conjunctive_normal_form(expression)
     # 5: Distribute ors and ands
     expression = distribute_or_and(expression)
 
-    return true
     return expression
 end
-
 
 
 function expand_expression(expression)
