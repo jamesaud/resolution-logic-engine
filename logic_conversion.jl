@@ -15,12 +15,11 @@ function nnf(expression::Array)
     end
 end
 
-function convert_expression(expression::Array)
+function nnf_expression(expression::Array)
     expand(expression) = @match expression begin
         s::Symbol => s
-        e::Array => convert_expression(nnf(e))
+        e::Array => nnf_expression(nnf(e))
     end
-
     expression = map(expand, nnf(expression))
     return expression
 end
@@ -60,6 +59,79 @@ function standardize_expression(expression::Array)
     return expression
 end
 
+
+# SKOLEMIZATION
+function _move_quantifiers(expression)
+    return @match expression begin
+      [:and, P, [:all, x, [Q, x]]]    => [:all, x, [:and, P, [Q, x]]]
+      [:or, P, [:all, x, [Q, x]]]     => [:all, x, [:or, P, [Q, x]]]
+      [:and, P, [:exists, x, [Q, x]]] => [:exists, x, [:and, P, [Q, x]]]
+      [:or, P, [:exists, x, [Q, x]]]  => [:exists, x, [:or, P, [Q, x]]]
+      X                               => X
+    end
+end
+
+
+function move_quantifiers(expression::Array)
+    expand(expression) = @match expression begin
+        s::Symbol => s
+        e::Array => move_quantifiers(_move_quantifiers(e))
+    end
+    expression = map(expand, _move_quantifiers(expression))
+    return expression
+end
+
+
+# Replaces existential qualitifers with the skolem function
+# variable_scope should map a variable to a function, like  UxUyEz  z: [f, x, y]
+# Replace variabels with f(variable_scope)
+# Variables maaps the existentional variable to a skolem function symbol
+function _skolem_function(expression, variable_scope::Array{Symbol}, variables::Dict{Symbol, Symbol}, symbol_fn)
+    recur(expression) = _skolem_function(expression, variable_scope, variables, symbol_fn)
+    expand(exp) = @match exp begin
+        s::Symbol           => begin
+                                if haskey(variables, s)
+                                    e = [variables[s]]
+                                    append!(e, variable_scope)
+                                else
+                                    e = s
+                                end
+                                e
+                               end
+        [:all, x, e]        => begin
+                                push!(variable_scope, x)
+                                [:all, x, recur(e)]
+                               end
+        [:exists, x, e]     => begin
+                                variables[x] = symbol_fn()
+                                recur(e)
+                               end
+        e                   => map(recur, e)
+    end
+    return expand(expression)
+end
+
+function skolem_function(expression)
+    alphabet = map(string, collect('a':'z'))
+    alphabet = [letter * "()" for letter in alphabet]
+    alphabet = reverse(alphabet)
+    alphabet = map(Symbol, alphabet)
+
+    function symbol_fn()
+        return pop!(alphabet)
+    end
+
+    variables = Dict{Symbol, Symbol}()
+    variable_scope = Symbol[]
+    expression = _skolem_function(expression, variable_scope, variables, symbol_fn)
+    println(expression)
+    return true
+end
+
+
+function skolemize(expression)
+
+end
 
 
 
