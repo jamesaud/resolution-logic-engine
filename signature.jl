@@ -12,6 +12,11 @@ struct Function
     arity::Integer
 end
 
+struct PropFunction
+    name::String
+    arity::Integer
+end
+
 struct Signature
     constants::Set{Constant}
     relations::Set{Relation}

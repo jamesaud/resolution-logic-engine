@@ -23,6 +23,7 @@ knowledge_base:
   facts:
     - "[Friend, [Friend, Peter, Adam], Adam]"
     - "[Friend, Adam, Eve]"
-    - "[Mother!, Peter, Eva]"
+    - "[equal, [Mother!, Peter], Eva]"
   theories:
     - "[exists, x, [or, [Friend, x, y], [Enemy, x, y]]]"
+    - "[exists, [Mother!, x]]"

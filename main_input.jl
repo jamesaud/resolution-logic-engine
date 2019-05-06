@@ -1,20 +1,37 @@
 import YAML
 include("knowledge_base.jl")
 
+# Helper functions
+function print_data(title, data)
+    println(title, ":")
+    for elem in data
+        println(" - ", elem)
+    end
+end
+
 # Load data
 data = YAML.load(open("input.yml"))
+kb = data["knowledge_base"]
+
+# Parse Signature
 signature = parse_signature(data["signature"])
-kb = data["knowledge_base"]["facts"]
+println("Signature")
+print_data(" Constants", signature.constants)
+print_data(" Relations", signature.relations)
+print_data(" Functions", signature.functions)
+println("----------------------------------")
 
 # Parse Input to Expr
-sentence = Meta.parse(kb[3])
+facts = map(Meta.parse, kb["facts"])
+println(facts)
 
 # Parse Expr to Data Structures
-constants, relations, functions = syntax(sentence)
+constants, relations, functions, prop_functions = parse_syntax_from_kb(facts, signature)
 
-# println(constants, relations, functions)
-if validate_syntax(sentence, signature)
-    print("Syntax is correct for input")
-else
-    throw(ArgumentError("Invalid Argument, Signature does not Match Syntax"))
-end
+
+
+print_data("Constants", constants)
+print_data("Relations", relations)
+print_data("Functions", functions)
+print_data("Logic", prop_functions)
+println("----------------------------------")
