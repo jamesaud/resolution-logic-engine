@@ -1,5 +1,4 @@
 using Test
-using Juno
 include("logic_conversion.jl")
 
 P = :P

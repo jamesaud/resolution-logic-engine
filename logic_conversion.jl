@@ -1,7 +1,7 @@
 using Match
 
 
-# Converts simple expression to negation normal form
+# Converts expression to negation normal form
 function eliminate_implication(expression)
     conversion = @match expression begin
       [:implies, P, Q]                 => [:or, [:not, P], Q]
