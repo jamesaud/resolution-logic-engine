@@ -22,18 +22,18 @@ print_data(" Functions", signature.functions)
 println("----------------------------------")
 
 # Parse Input to Expr
-facts = map(Meta.parse, kb["facts"])
-theories = map(Meta.parse, kb["theories"])
-println(theories)
+kb = map(Meta.parse, kb)
+
+println(kb)
 println("Knowledge Base")
 
 # Parse Expr to Data Structures
-constants, relations, functions, prop_functions = parse_syntax_from_kb(facts, signature)
-
+constants, relations, functions, prop_functions, q_functions = parse_syntax_from_kb(kb, signature)
 
 
 print_data(" Constants", constants)
 print_data(" Relations", relations)
 print_data(" Functions", functions)
-print_data(" Logic", prop_functions)
+print_data(" Logic", [collect(prop_functions); collect(q_functions)])
+
 println("----------------------------------")

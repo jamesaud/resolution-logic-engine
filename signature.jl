@@ -17,6 +17,11 @@ struct PropFunction
     arity::Integer
 end
 
+struct QuantFunction
+    name::String
+    arity::Integer
+end
+
 struct Signature
     constants::Set{Constant}
     relations::Set{Relation}
