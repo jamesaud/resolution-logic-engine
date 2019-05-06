@@ -2,11 +2,19 @@ import YAML
 include("knowledge_base.jl")
 
 # Helper functions
+print_break() = println("----------------------------------")
+
 function print_data(title, data)
-    println(title, ":")
+    println(" ", title, ":")
     for elem in data
-        println(" - ", elem)
+        println("  - ", elem)
     end
+end
+
+function print_title(title)
+    print_break()
+    println("| ", title)
+    print_break()
 end
 
 # Load data
@@ -15,25 +23,22 @@ kb = data["knowledge_base"]
 
 # Parse Signature
 signature = parse_signature(data["signature"])
-println("Signature")
+
+print_title("Signature")
 print_data(" Constants", signature.constants)
 print_data(" Relations", signature.relations)
 print_data(" Functions", signature.functions)
-println("----------------------------------")
 
 # Parse Input to Expr
 kb = map(Meta.parse, kb)
 
-println(kb)
-println("Knowledge Base")
 
 # Parse Expr to Data Structures
 constants, relations, functions, prop_functions, q_functions = parse_syntax_from_kb(kb, signature)
 
-
-print_data(" Constants", constants)
-print_data(" Relations", relations)
-print_data(" Functions", functions)
-print_data(" Logic", [collect(prop_functions); collect(q_functions)])
-
-println("----------------------------------")
+print_title("Knowledge Base")
+print_data("Constants", constants)
+print_data("Relations", relations)
+print_data("Functions", functions)
+print_data("Logic", [collect(prop_functions); collect(q_functions)])
+print_break()
