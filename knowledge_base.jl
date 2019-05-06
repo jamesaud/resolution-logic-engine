@@ -2,7 +2,6 @@ using Match
 
 include("signature.jl")
 include("logic_conversion.jl")
-include("helpers.jl")
 
 FN_CHAR = '!'
 
@@ -21,6 +20,13 @@ PROP_FUNCTIONS = Set([PropFunction(string(name), arity) for (name, arity) in PRO
 Q_ARITY =  Dict(UQ=>2, EQ=>2)
 Q_FUNCTIONS = Set([QuantFunction(string(name), arity) for (name, arity) in Q_ARITY])
 
+
+function expand_expression(expression)
+    return @match expression begin
+        s::Symbol => s
+        e::Expr   => [expand_expression(exp) for exp in e.args]
+    end
+end
 
 function validate_syntax(expression::Expr, signature::Signature)
     err(type) = throw(ArgumentError("$type do not match signature in statement: " * string(expression)))
