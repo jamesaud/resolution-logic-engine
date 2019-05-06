@@ -20,12 +20,16 @@ PROP_LOGIC = collect(keys(PROP_ARITY))
 PROP_FUNCTIONS = Set([PropFunction(string(key), val) for (key, val) in PROP_ARITY])
 
 function validate_syntax(expression::Expr, signature::Signature)
+    err(type) = throw(ArgumentError("$type do not match signature in statement: " * string(expression)))
     diff(x, y) = length(setdiff(x, y))
+
     constants, relations, functions, prop_functions = syntax(expression)
-    return diff(constants, signature.constants) +
-           diff(relations, signature.relations) +
-           diff(functions, signature.functions) +
-           diff(prop_functions, PROP_FUNCTIONS) == 0
+
+    if diff(constants, signature.constants)     != 0; err("Constants")
+    elseif diff(relations, signature.relations) != 0; err("Relations")
+    elseif diff(functions, signature.functions) != 0; err("Functions")
+    elseif diff(prop_functions, PROP_FUNCTIONS) != 0; err("Logic")
+    end
 end
 
 
@@ -73,9 +77,7 @@ function parse_syntax_from_kb(expressions::Array{Expr}, signature)
     f = Set{Function}()
     p = Set{PropFunction}()
     for exp in expressions
-        if !validate_syntax(exp, signature)
-            throw(ArgumentError("Signature does not match syntax: ", expression))
-        end
+        validate_syntax(exp, signature)
         _c, _r, _f, _p = syntax(exp)
         c = union(c, _c)
         r = union(r, _r)
