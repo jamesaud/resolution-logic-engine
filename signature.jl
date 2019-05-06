@@ -48,6 +48,9 @@ function parse_functions(functions_data)
     for fn in functions_data
         fn = fn.second
         fn = Function(fn["name"], fn["arity"])
+        if fn.name[end] != '!'
+            throw(ArgumentError("Functions should end with '!': " * fn.name))
+        end
         push!(functions, fn)
     end
     return functions
