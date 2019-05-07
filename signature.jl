@@ -28,6 +28,9 @@ struct Signature
     functions::Set{Function}
 end
 
+mutable struct KnowledgeBase
+    sentences::Array
+end
 
 function parse_constants(constants_data)
     return Set(map(Constant, constants_data))

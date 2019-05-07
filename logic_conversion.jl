@@ -200,3 +200,12 @@ function conjunctive_normal_form(expression)
 
     return expression
 end
+
+# Skoelmized, CNF expression should be passed as input
+function clause_form(expression)
+    return @match expression begin
+        [:and, P, Q] => union(clause_form(P), clause_form(Q))
+        s::Symbol    => Set([s])
+        expr         => Set([expr])
+    end
+end

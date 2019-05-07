@@ -21,14 +21,7 @@ Q_ARITY =  Dict(UQ=>2, EQ=>2)
 Q_FUNCTIONS = Set([QuantFunction(string(name), arity) for (name, arity) in Q_ARITY])
 
 
-function expand_expression(expression)
-    return @match expression begin
-        s::Symbol => s
-        e::Expr   => [expand_expression(exp) for exp in e.args]
-    end
-end
-
-function validate_syntax(expression::Expr, signature::Signature)
+function validate_syntax(expression::Array, signature::Signature)
     err(type) = throw(ArgumentError("$type do not match signature in statement: " * string(expression)))
     diff(x, y) = length(setdiff(x, y))
 
@@ -76,8 +69,7 @@ function _syntax(expression,
     return constants, relations, functions, prop_functions, q_functions
 end
 
-function syntax(expression::Expr)
-    expression = expand_expression(expression)
+function syntax(expression::Array)
     c =  Set{Constant}()
     r = Set{Relation}()
     f = Set{Function}()
@@ -87,8 +79,8 @@ function syntax(expression::Expr)
     return _syntax(expression, c, r, f, p, q, vars)
 end
 
-function parse_syntax_from_kb(expressions::Array{Expr}, signature)
-    c =  Set{Constant}()
+function parse_syntax_from_kb(expressions::Array, signature)
+    c = Set{Constant}()
     r = Set{Relation}()
     f = Set{Function}()
     p = Set{PropFunction}()

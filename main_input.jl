@@ -17,6 +17,13 @@ function print_title(title)
     print_break()
 end
 
+function expand_expression(expression)
+    return @match expression begin
+        s::Symbol => s
+        e::Expr   => [expand_expression(exp) for exp in e.args]
+    end
+end
+
 # Load data
 data = YAML.load(open("input.yml"))
 kb = data["knowledge_base"]
@@ -31,7 +38,7 @@ print_data(" Functions", signature.functions)
 
 # Parse Input to Expr
 kb = map(Meta.parse, kb)
-
+kb = map(expand_expression, kb)
 
 # Parse Expr to Data Structures
 constants, relations, functions, prop_functions, q_functions = parse_syntax_from_kb(kb, signature)
@@ -42,3 +49,9 @@ print_data("Relations", relations)
 print_data("Functions", functions)
 print_data("Logic", [collect(prop_functions); collect(q_functions)])
 print_break()
+
+
+# Converting to CNF
+kb = map(conjunctive_normal_form, kb)
+kb = reduce(union, map(clause_form, kb))
+print_data("Clauses", kb)

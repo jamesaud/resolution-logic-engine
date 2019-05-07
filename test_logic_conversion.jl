@@ -100,3 +100,6 @@ out = [:and, [:or, [:Loves, [Symbol("b()"), :x1], :x1],
              [:not, [:Loves, :x1, [Symbol("a()"), :x1]]]]]
 
 @test conjunctive_normal_form(exp) == out
+
+@test clause_form([:and, [:or, :P, :Q], :P]) == Set([:P, [:or, :P, :Q]])
+@test clause_form([:and, [:and, [:or, :P, :Q], :P], :Q]) == Set([:P, :Q, [:or, :P, :Q]])
