@@ -32,7 +32,7 @@ function move_not_inward(expression)
 end
 
 
-function nnf(expression::Array)
+function nnf(expression)
     expression = eliminate_implication(expression)
 
     prev_exp = nothing
@@ -67,7 +67,7 @@ function _standardize_variables(expression, variable_scope::Dict{Symbol, Symbol}
 end
 
 
-function standardize_expression(expression::Array)
+function standardize_expression(expression)
     variable_scope =  Dict{Symbol, Symbol}()
     # Create new Symbol everytime the function is called
     count = 0
@@ -92,7 +92,7 @@ function _move_quantifiers(expression)
 end
 
 
-function move_quantifiers(expression::Array)
+function move_quantifiers(expression)
     recur(expression) = @match expression begin
         s::Symbol => s
         e::Array => move_quantifiers(_move_quantifiers(e))
@@ -203,9 +203,102 @@ end
 
 # Skoelmized, CNF expression should be passed as input
 function clause_form(expression)
-    return @match expression begin
-        [:and, P, Q] => union(clause_form(P), clause_form(Q))
+    remove_and(exp) = @match exp begin
+        [:and, P, Q] => union(remove_and(P), remove_and(Q))
         s::Symbol    => Set([s])
         expr         => Set([expr])
     end
+
+    remove_or(exp) = @match exp begin
+        [:or, P, Q]  => union(remove_or(P), remove_or(Q))
+        s::Symbol    => Set([s])
+        expr         => Set([expr])
+    end
+
+    expression = remove_and(expression)
+    expression = map(remove_or, collect(expression))
+    return Set(expression)
+end
+
+function print_data(title, data)
+    println(" ", title, ":")
+    for elem in data
+        println("  - ", elem)
+    end
+end
+
+
+function _contains_complement(literal, clause::Set)
+    return @match literal begin
+        [:not, exp] => exp in clause
+        exp         => [:not, exp] in clause
+    end
+end
+
+function _complementary_literals(clause1, clause2)
+    get_literal(literal) = @match literal begin
+        [:not, l] || l => l
+    end
+    literals = [lit for lit in clause1 if _contains_complement(lit, clause2)]
+    literals = map(get_literal, literals)
+    literals = Set(literals)
+    return literals
+end
+
+function _has_complementary_literals(clause1, clause2)
+    return !isempty(_complementary_literals(clause1, clause2))
+end
+
+# Removes literals and the their complements in a clause
+function _remove_literals_and_negations(literals::Set, clause::Set)
+    negated_literals = Set([[:not, l] for l in literals])
+    all_literals = union(negated_literals, literals)
+    return setdiff(clause, all_literals)
+end
+
+function _resolve(clause1::Set, clause2::Set)
+    literals = _complementary_literals(clause1, clause2)
+    clause = union(clause1, clause2)
+    clause = _remove_literals_and_negations(literals, clause)
+    return clause
+end
+
+# Produces all possible new clauses using the resoltion rule
+function _resolution_rule(clauses::Set)
+    S = Set()
+    for c1 in clauses
+        for c2 in clauses
+            if _has_complementary_literals(c1, c2)
+                sentence = _resolve(c1, c2)
+                if !_has_complementary_literals(sentence, sentence)
+                    push!(S, sentence)
+                end
+            end
+        end
+    end
+    return S
+end
+
+# Returns all new possible clauses that are entailed
+function resolve(clauses::Set)
+    S = Set()
+    while S != clauses
+        clauses = S
+        S = _resolution_rule(clauses)
+        if any(map(isempty, S))
+            throw(ArgumentError("Empty set found during resolution, therefore a contradiction!"))
+        end
+    end
+    return S
+end
+
+function resolution(kb::Array, query)
+    kb = [kb; [[:not, query]]]
+    kb = map(conjunctive_normal_form, kb)
+    kb = map(clause_form, kb)
+    kb = reduce(union, kb)
+
+    # KB is simply a group of clauses at this point
+    print_data("Clauses", kb)
+    return true
 end

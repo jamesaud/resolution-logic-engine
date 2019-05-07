@@ -101,5 +101,16 @@ out = [:and, [:or, [:Loves, [Symbol("b()"), :x1], :x1],
 
 @test conjunctive_normal_form(exp) == out
 
-@test clause_form([:and, [:or, :P, :Q], :P]) == Set([:P, [:or, :P, :Q]])
-@test clause_form([:and, [:and, [:or, :P, :Q], :P], :Q]) == Set([:P, :Q, [:or, :P, :Q]])
+set(exp...) = Set(exp)
+
+in = [:and, [:or, :P, :Q], :P]
+out = set(set(:P), set(:P, :Q))
+@test clause_form(in) == out
+
+in = [:and, [:and, [:or, :P, :Q], :P], :Q]
+out = set(set(:P, :Q), set(:Q), set(:P))
+@test clause_form(in) == out
+
+in = [:and, [:and, [:and, [:and, :P, :Q], :R], :S], :T]
+out = set(set(:P), set(:Q), set(:R), set(:S), set(:T))
+@test clause_form(in) == out

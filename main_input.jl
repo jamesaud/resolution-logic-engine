@@ -52,6 +52,4 @@ print_break()
 
 
 # Converting to CNF
-kb = map(conjunctive_normal_form, kb)
-kb = reduce(union, map(clause_form, kb))
-print_data("Clauses", kb)
+resolution(kb)
