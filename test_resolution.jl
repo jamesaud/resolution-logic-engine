@@ -28,3 +28,9 @@ c2 = set(:c)
 c3 = set([:not, :a])
 @test _resolution_rule(set(c1, c2)) == set(set(:a, :b))
 @test _resolution_rule(set(c1, c2, c3)) == set(set(:a, :b), set(:b, [:not, :c]))
+
+@test _has_complementary_literals(set(:s), set([:not, :s]))
+@test !_has_complementary_literals(set(:s), set([:not, :p]))
+
+clauses = set(set(:c), set([:not, :c]))
+@test_throws ArgumentError resolve(clauses)

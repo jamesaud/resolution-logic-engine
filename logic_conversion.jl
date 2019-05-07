@@ -279,13 +279,14 @@ function _resolution_rule(clauses::Set)
     return S
 end
 
-# Returns all new possible clauses that are entailed
+# Returns all new possible clauses that are entailed, throws exception if contradiction found
 function resolve(clauses::Set)
     S = Set()
     while S != clauses
-        clauses = S
-        S = _resolution_rule(clauses)
-        if any(map(isempty, S))
+        _clauses = _resolution_rule(clauses)
+        S = clauses
+        clauses = _clauses
+        if any([isempty(c) for c in S])
             throw(ArgumentError("Empty set found during resolution, therefore a contradiction!"))
         end
     end
