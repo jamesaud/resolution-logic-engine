@@ -61,8 +61,8 @@ end
 
 function parse_signature(signature_data)
     data = signature_data
-    constants = parse_constants(data["constants"])
-    relations = parse_relations(data["relations"])
-    functions = parse_functions(data["functions"])
+    constants = parse_constants(get(data, "constants", []))
+    relations = parse_relations(get(data, "relations", []))
+    functions = parse_functions(get(data, "functions", []))
     return Signature(constants, relations, functions)
 end

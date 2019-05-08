@@ -1,0 +1,30 @@
+signature:
+  constants:
+    - Peter
+    - Adam
+    - Eve
+    - Eva
+
+  functions:
+    mother:
+      name: Mother!
+      arity: 1
+
+  relations:
+    friend:
+      name: Friend
+      arity: 2
+    enemy:
+      name: Enemy
+      arity: 2
+
+
+knowledge_base:
+    - "[Friend, [Friend, Peter, Adam], Adam]"
+    - "[and, [Friend, Adam, Eve], [Friend, Eve, Adam]]"
+    - "[equal, [Mother!, Peter], Eva]"
+    - "[all, y, [exists, x, [or, [Friend, x, y], [Enemy, x, y]]]]"
+    - "[exists, x, [Friend, x, Eve]]"
+
+query:
+  - "[]"

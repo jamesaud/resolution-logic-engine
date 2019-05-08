@@ -18,8 +18,8 @@ end
 
 function move_not_inward(expression)
     conversion = @match expression begin
-        [:not, [:or, P, Q]]            => [:and, [:not, P], [:not, Q]]
-        [:not, [:and, P, Q]]           => [:or, [:not, P], [:not, Q]]
+        [:not, [:or, P, Q]]              => [:and, [:not, P], [:not, Q]]
+        [:not, [:and, P, Q]]             => [:or, [:not, P], [:not, Q]]
         [:not, [:not, P]]                => P
         [:not, [:all, x, Px]]            => [:exists, x, [:not, Px]]
         [:not, [:exists, x, Px]]         => [:exists, x, [:not, Px]]
@@ -409,7 +409,6 @@ function resolution(kb::Array, query)
     kb = map(conjunctive_normal_form, kb)
     kb = map(clause_form, kb)
     kb = reduce(union, kb)
-
     try
         resolve(kb)
         return false

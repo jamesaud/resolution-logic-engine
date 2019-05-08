@@ -4,16 +4,15 @@ kb = [
       [:all, :y, [:implies, [:barber, :y],
                             [:double_implies, [:shaves, :x, :y],
                                               [:not, [:shaves, :y, :y]]]]]]
-entails = [:not, [:exists, :x, [:barber, :x]]]
+query = [:not, [:exists, :x, [:barber, :x]]]
 
 
-is_entailed = resolution(kb, entails)
-if is_entailed
-      println("The expression is entailed.")
+if resolution(kb, query)
+      println("The query is entailed.")
       println()
-      clauses = resolution_steps(kb)                                 # Generated clauses from only the knowledge base
-      clauses = Set(Set{Any}(c) for c in collect(clauses))   # Easier to read the output of
-      print_data("Resolution Steps (Clausal Form)", clauses)
+      clauses = resolution_steps(kb)                # Generated clauses from only the knowledge base
+      clauses = Set(Set{Any}(c) for c in clauses)   # Easier to read the output
+      print_data("Resolution Clauses Entailed from KB (without query, in clausal form)", clauses)
 else
       println("The expression is NOT entailed! Exiting...")
       exit()

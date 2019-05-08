@@ -121,8 +121,30 @@ entails = [:not, [:exists, :x, [:barber, :x]]]
 @test !resolution(kb, [:exists, :x, [:barber, :x]])
 
 
-print_data("Resolution Steps (Clausal Form)", map(collect, collect(resolution_steps(kb))))
-
 kb = []
 entails = [:implies, :p, :p]
+@test resolution(kb, entails)
+
+
+kb = [
+ [:or, [:not, [:Friend, :Peter, :Eve]], [:Friend, :Peter, :Adam]],
+ [:Friend, :Peter, :Eve]
+]
+entails = [:Friend, :Peter, :Adam]
+@test resolution(kb, entails)
+
+
+
+kb = [
+ [:or, :P, :Q],
+ [:not, :P]
+]
+entails = :Q
+@test resolution(kb, entails)
+
+kb = [
+ [:or, [:Friend, :Peter, :Eve], [:Friend, :Peter, :Adam]],
+ [:not, [:Friend, :Peter, :Eve]]
+]
+entails = [:Friend, :Peter, :Adam]
 @test resolution(kb, entails)

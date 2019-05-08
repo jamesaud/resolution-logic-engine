@@ -51,4 +51,6 @@ print_data("Logic", [collect(prop_functions); collect(q_functions)])
 
 
 # Converting to CNF
-resolution(kb)
+queries = map(Meta.parse, data["query"])
+print_data("Queries", queries)
+answers = [resolution(kb, query) for query in queries]

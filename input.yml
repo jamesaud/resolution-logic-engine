@@ -5,11 +5,6 @@ signature:
     - Eve
     - Eva
 
-  functions:
-    mother:
-      name: Mother!
-      arity: 1
-
   relations:
     friend:
       name: Friend
@@ -20,10 +15,8 @@ signature:
 
 
 knowledge_base:
-    - "[Friend, [Friend, Peter, Adam], Adam]"
-    - "[and, [Friend, Adam, Eve], [Friend, Eve, Adam]]"
-    - "[equal, [Mother!, Peter], Eva]"
-    - "[all, y, [exists, x, [or, [Friend, x, y], [Enemy, x, y]]]]"
-    - "[exists, x, [Mother!, x]]"
-    - "[exists, x, [Friend, x, Eve]]"
-    - "[and, [exists, x, [Friend, x, Eve]], [exists, y, [Friend, Eve, y]]]"
+    - "[or, [Friend, Peter, Eve], [Friend, Peter, Adam]]"
+    - "[not, [Friend, Peter, Eve]]"
+
+query:
+    - "[Friend, Peter, Adam]"
