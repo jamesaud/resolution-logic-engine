@@ -1,9 +1,5 @@
 using Match
 
-function mgu(f1, f2)
-
-end
-
 # Step 1
 function check_predicates_match(expressions::Array)
     exp = [exp[1] for exp in expressions]
@@ -38,6 +34,7 @@ function _occurs_in(symbol::Symbol, fx::Array)
 end
 
 function _unify(e1, e2, substitutions::Dict)
+    @assert length(e1) == length(e2) "Arguments should be the same length"
     err() = throw(ArgumentError("Not Unifiable"))
 
     find_subs(pair) = @match pair begin
@@ -69,11 +66,9 @@ function unify(e1, e2)
     if !check_predicates_match([e1, e2])
         throw(ArgumentError("Predicates don't match"))
     end
-
     predicate = e1[1]
-    e1, e2 = e1[2], e2[2]
+    e1, e2 = e1[2:end], e2[2:end]
     e1, e2, subs = _unify(e1, e2, Dict())
-    @assert e1 == e2 "Input is likely invalid"    # Actually unecessary, as exception should be raised in _unify 
-
-    return [predicate, e1], subs
+    @assert e1 == e2 "Input is likely invalid"    # Actually unecessary, as exception should be raised in _unify
+    return [predicate; e1], subs
 end

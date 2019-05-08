@@ -1,4 +1,5 @@
 using Match
+include("mgu.jl")
 
 
 # Converts expression to negation normal form
@@ -220,15 +221,7 @@ function clause_form(expression)
     return Set(expression)
 end
 
-function print_data(title, data)
-    println(" ", title, ":")
-    for elem in data
-        println("  - ", elem)
-    end
-end
-
-
-function _contains_complement(literal, clause::Set)
+function _contains_complement_literal(literal, clause::Set)
     return @match literal begin
         [:not, exp] => exp in clause
         exp         => [:not, exp] in clause
@@ -239,7 +232,7 @@ function _complementary_literals(clause1, clause2)
     get_literal(literal) = @match literal begin
         [:not, l] || l => l
     end
-    literals = [lit for lit in clause1 if _contains_complement(lit, clause2)]
+    literals = [lit for lit in clause1 if _contains_complement_literal(lit, clause2)]
     literals = map(get_literal, literals)
     literals = Set(literals)
     return literals
@@ -268,8 +261,12 @@ function _resolution_rule(clauses::Set)
     S = Set()
     for c1 in clauses
         for c2 in clauses
+
+            # TODO: Perform predicate unification here
+
             if _has_complementary_literals(c1, c2)
                 sentence = _resolve(c1, c2)
+
                 if !_has_complementary_literals(sentence, sentence)
                     push!(S, sentence)
                 end
@@ -279,13 +276,117 @@ function _resolution_rule(clauses::Set)
     return S
 end
 
+
+# Returns the complementary predicates expressions in clause 1
+function _complementary_predicate_expressions(clause1, clause2)
+
+    is_in_expr(pred, expr) = @match expr begin
+        [p, _...] => p == pred
+        _         => false
+    end
+
+    is_negation_in_expr(pred, expr) = @match expr begin
+        [:not, [p, _...]] => p == pred
+        _                 => false
+    end
+
+    is_in_clause(pred, clause) = any(is_in_expr(pred, e) for e in clause)
+    is_negation_in_clause(pred, clause) = any(is_negation_in_expr(pred, e) for e in clause)
+
+    is_complementary(expr, clause2) = @match expr begin
+        [:not, [p, _...]] => is_in_clause(p, clause2)
+        [p, _...]         => is_negation_in_clause(p, clause2)
+        _                 => false
+    end
+
+    predicates = [expr for expr in clause1 if is_complementary(expr, clause2)]
+    return predicates
+end
+
+function _extract_predicate(expr)
+    return @match expr begin
+        [:not, [p, _...]] => p
+        [p, _...]         => p
+    end
+end
+
+function _complementary_predicates(clause1, clause2)
+    expressions = _complementary_predicate_expressions(clause1, clause2)
+    predicates = [_extract_predicate(expr) for expr in expressions]
+    return Set(predicates)
+end
+
+function _replace_unbounded_variable(clause::Set, var, new_var)
+    replace_variable(expr) = @match expr begin
+        s::Symbol        => var == s ? new_var : s
+        [p, e...]        => [p, map(replace_variable, e)...]
+        [:not [p, e...]] => [:not, [p, map(replace_variable, e)...]]
+        e                => e
+    end
+
+    replace(expr) = @match expr begin
+        [p, e...] || [:not [p, e...]] => replace_variable(expr)
+        e                             => e
+    end
+
+    return Set([replace(expr) for expr in clause])
+end
+
+# Finds predicate in CNF clause and unifies based on it. Returns clauses with predicate replaced with the unification
+function unify_clauses(clause1::Set, clause2::Set)
+    extract_predicate_expression(expr) = @match expr begin
+        [:not, [p, e...]] => [p, e...]
+        [p, e...]         => [p, e...]
+    end
+
+    replace(expr, predicate, new_expr) = begin
+        expr = @match expr begin
+            [:not, [p, _...]] => p == predicate ? [:not, new_expr] : expr
+            [p, _...]         => p == predicate ? new_expr : expr
+            _                 => expr
+        end
+        return expr
+
+    end
+
+    c1_expressions = _complementary_predicate_expressions(clause1, clause2)
+    c2_expressions = _complementary_predicate_expressions(clause2, clause1)
+    c1_expressions = map(extract_predicate_expression, c1_expressions)
+    c2_expressions = map(extract_predicate_expression, c2_expressions)
+
+    unifications = [unify(e1, e2) for (e1, e2) in zip(c1_expressions, c2_expressions)]
+    unifications, subs = collect(zip(unifications...))
+    subs = reduce(merge, subs)
+    predicates = map(_extract_predicate, c1_expressions)
+
+
+    c1, c2 = clause1, clause2
+    for (pred, unification) in zip(predicates, unifications)
+        c1 = [replace(expr, pred, unification) for expr in c1]
+        c2 = [replace(expr, pred, unification) for expr in c2]
+    end
+
+    # Now unbound variables in other predicates need to replaced
+    c1, c2 = Set(c1), Set(c2)
+
+    for (var, new_var) in subs
+        c1 = _replace_unbounded_variable(c1, var, new_var)
+        c2 = _replace_unbounded_variable(c2, var, new_var)
+    end
+
+    return c1, c2, subs
+end
+
+
 # Returns all new possible clauses that are entailed, throws exception if contradiction found
 function resolve(clauses::Set)
-    S = Set()
-    while S != clauses
-        _clauses = _resolution_rule(clauses)
-        S = clauses
-        clauses = _clauses
+    S = clauses
+    _prev = set()
+
+    # Run until no new clauses are found
+    while _prev != S
+        _prev = S
+        S = union(S, _resolution_rule(S))
         if any([isempty(c) for c in S])
             throw(ArgumentError("Empty set found during resolution, therefore a contradiction!"))
         end
