@@ -25,11 +25,12 @@ end
 
 
 # Checks whether symbol occurs in the expression
-function _occurs_in(symbol::Symbol, fx::Array)
+function _occurs_in(symbol::Symbol, fx)
     return @match fx begin
+        s::Symbol              => s == symbol
         [F, s::Symbol]         => s == symbol
-        [F, x::Array]          => _occurs_in(symbol, x)  # It's a function, so go deeper
-        _                      => throw(ArgumentError("Argument must be function [F, x]: " * string(expr) ))
+        [F, x...]              => symbol in fx || any([_occurs_in(symbol, e) for e in fx])  # It's a function, so go deeper
+        _                      => false
     end
 end
 
@@ -45,8 +46,10 @@ function _unify(e1, e2, substitutions::Dict)
                                                  end
         [ [F, x], [G, y] ]                    => find_subs([x, y])  # If they are both functions, go inside
         [ [F, x], [G, x] ]                    => err()
-        [[], _] || [_, []]                    => err()
+        [[], _] || [_, []] || _               => err()  # TODO: Changed _
+
     end
+
 
     for i = 1:length(e1)
         pair = [e1[i], e2[i]]

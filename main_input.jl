@@ -48,7 +48,6 @@ print_data("Constants", constants)
 print_data("Relations", relations)
 print_data("Functions", functions)
 print_data("Logic", [collect(prop_functions); collect(q_functions)])
-print_break()
 
 
 # Converting to CNF

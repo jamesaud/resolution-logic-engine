@@ -261,9 +261,13 @@ function _resolution_rule(clauses::Set)
     S = Set()
     for c1 in clauses
         for c2 in clauses
-
-            # TODO: Perform predicate unification here
-
+            try
+                if _has_complementary_predicates(c1, c2)
+                    c1, c2, subs = unify_clause_predicates(c1, c2)
+                end
+            catch exception
+                continue
+            end
             if _has_complementary_literals(c1, c2)
                 sentence = _resolve(c1, c2)
 
@@ -310,10 +314,15 @@ function _extract_predicate(expr)
     end
 end
 
+
 function _complementary_predicates(clause1, clause2)
     expressions = _complementary_predicate_expressions(clause1, clause2)
     predicates = [_extract_predicate(expr) for expr in expressions]
     return Set(predicates)
+end
+
+function _has_complementary_predicates(clause1, clause2)
+    return !isempty(_complementary_predicates(clause1, clause2))
 end
 
 function _replace_unbounded_variable(clause::Set, var, new_var)
@@ -333,7 +342,7 @@ function _replace_unbounded_variable(clause::Set, var, new_var)
 end
 
 # Finds predicate in CNF clause and unifies based on it. Returns clauses with predicate replaced with the unification
-function unify_clauses(clause1::Set, clause2::Set)
+function unify_clause_predicates(clause1::Set, clause2::Set)
     extract_predicate_expression(expr) = @match expr begin
         [:not, [p, e...]] => [p, e...]
         [p, e...]         => [p, e...]
@@ -381,7 +390,7 @@ end
 # Returns all new possible clauses that are entailed, throws exception if contradiction found
 function resolve(clauses::Set)
     S = clauses
-    _prev = set()
+    _prev = Set()
 
     # Run until no new clauses are found
     while _prev != S
@@ -394,13 +403,31 @@ function resolve(clauses::Set)
     return S
 end
 
+# Returns true if statement in resolution, and all of the generated clauses
 function resolution(kb::Array, query)
     kb = [kb; [[:not, query]]]
     kb = map(conjunctive_normal_form, kb)
     kb = map(clause_form, kb)
     kb = reduce(union, kb)
 
-    # KB is simply a group of clauses at this point
-    print_data("Clauses", kb)
-    return true
+    try
+        resolve(kb)
+        return false
+    catch exception
+        return true
+    end
+end
+
+function resolution_steps(kb::Array)
+    kb = map(conjunctive_normal_form, kb)
+    kb = map(clause_form, kb)
+    kb = reduce(union, kb)
+    return resolve(kb)
+end
+
+function print_data(title, data)
+    println(" ", title, ":")
+    for elem in data
+        println("  - ", elem)
+    end
 end
