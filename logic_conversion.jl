@@ -387,34 +387,32 @@ function unify_clause_predicates(clause1::Set, clause2::Set)
 end
 
 
-# Returns all new possible clauses that are entailed, throws exception if contradiction found
+# Returns all new possible clauses that are entailed, return true if contradiction found
 function resolve(clauses::Set)
     S = clauses
     _prev = Set()
-
+    contradiction = false
     # Run until no new clauses are found
     while _prev != S
         _prev = S
         S = union(S, _resolution_rule(S))
         if any([isempty(c) for c in S])
-            throw(ArgumentError("Empty set found during resolution, therefore a contradiction!"))
+            contradiction = true
+            break
         end
     end
-    return S
+    return contradiction, S
 end
 
-# Returns true if statement in resolution, and all of the generated clauses
+# Returns true if the query is entailed from the knowledge base
 function resolution(kb::Array, query)
     kb = [kb; [[:not, query]]]
     kb = map(conjunctive_normal_form, kb)
+    print_data("KB", kb)
     kb = map(clause_form, kb)
     kb = reduce(union, kb)
-    try
-        resolve(kb)
-        return false
-    catch exception
-        return true
-    end
+    empty_set_found, S = resolve(kb)   # If the empty set is found, the query is entailed!
+    return empty_set_found, S
 end
 
 function resolution_steps(kb::Array)

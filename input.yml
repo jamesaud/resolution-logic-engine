@@ -1,22 +1,23 @@
 signature:
   constants:
-    - Peter
-    - Adam
-    - Eve
-    - Eva
 
   relations:
-    friend:
-      name: Friend
+    shaves:
+      name: shaves
       arity: 2
-    enemy:
-      name: Enemy
-      arity: 2
+
+  functions:
+    barber:
+      name: barber!
+      arity: 1
+
 
 
 knowledge_base:
-    - "[or, [Friend, Peter, Eve], [Friend, Peter, Adam]]"
-    - "[not, [Friend, Peter, Eve]]"
+    - "[all, y, [implies, [barber!, y], [double_implies, [shaves, x, y], [not, [shaves, y, y]]]]]"
 
 query:
-    - "[Friend, Peter, Adam]"
+    - "[not, [exists, x, [barber!, x]]]"
+    - "[exists, x, [barber!, x]]"
+    - "[implies, p, q]"
+    - "[or, p, [not, p]]"

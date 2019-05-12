@@ -1,0 +1,14 @@
+signature:
+  constants:
+    - P
+    - Q
+  relations:
+  functions:
+
+knowledge_base:
+    - "[and, P, Q]"
+
+query:
+    - "P"
+    - "Q"
+    - "Z"

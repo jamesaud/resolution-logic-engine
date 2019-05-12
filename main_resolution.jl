@@ -7,13 +7,14 @@ kb = [
 query = [:not, [:exists, :x, [:barber, :x]]]
 
 
-if resolution(kb, query)
-      println("The query is entailed.")
+entailed, clauses = resolution(kb, query)
+clauses = Set(Set{Any}(c) for c in clauses)
+if entailed
+      println("The query is entailed (by contradiction of the negated query).")
       println()
-      clauses = resolution_steps(kb)                # Generated clauses from only the knowledge base
-      clauses = Set(Set{Any}(c) for c in clauses)   # Easier to read the output
-      print_data("Resolution Clauses Entailed from KB (without query, in clausal form)", clauses)
+         # Easier to read the output
 else
-      println("The expression is NOT entailed! Exiting...")
-      exit()
+      println("The expression is NOT entailed (no contradiction found of negated query).")
 end
+
+print_data("Resolution Clauses Entailed from KB", clauses)

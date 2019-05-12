@@ -71,7 +71,8 @@ c3 = set([:not, :a])
 @test _resolution_rule(set(c1, c2, c3)) == set(set(:a, :b), set(:b, [:not, :c]))
 
 clauses = set(set(:c), set([:not, :c]))
-@test_throws ArgumentError resolve(clauses)
+contradiction, clauses = resolve(clauses)
+@test contradiction
 
 clauses = set(
       set([:not, :b], :c),
@@ -79,16 +80,16 @@ clauses = set(
       set([:not, :a])
 )
 entailed = set(set(:b), set(:c), set(:a, :c))
-@test resolve(clauses) == union(clauses, entailed)
-@test resolve(set(set(:a), set(:b))) == set(set(:a), set(:b))
-@test resolve(set()) == set()
+@test resolve(clauses) == (false, union(clauses, entailed))
+@test resolve(set(set(:a), set(:b))) == (false, set(set(:a), set(:b)))
+@test resolve(set()) == (false, set())
 
 clauses = set(
       set([:not, [:P, :x]], [:Q, :x]),
       set([:P, :a])
 )
 entailed = set(set([:Q, :a]), set([:Q, :x]))
-@test resolve(clauses) == union(clauses, entailed)
+@test resolve(clauses) == (false, union(clauses, entailed))
 
 # Test Resolution
 kb = [
@@ -97,8 +98,8 @@ kb = [
 ]
 query = [:Q, :a]
 
-@test resolution(kb, query)
-@test !resolution(kb, [:H, :z])
+@test resolution(kb, query)[1]
+@test !resolution(kb, [:H, :z])[1]
 
 
 kb = [
@@ -107,9 +108,7 @@ kb = [
                                                  [:double_implies, [:shaves, :x, :y],
                                                                    [:not, [:shaves, :y, :y]]]]]]]]
 
-@test resolution(kb, [:not, [:exists, :x, [:person, :x]]])
-@test_throws ArgumentError resolution_steps(kb)
-
+@test resolution(kb, [:not, [:exists, :x, [:person, :x]]])[1]
 
 kb = [
       [:all, :y, [:implies, [:barber, :y],
@@ -117,13 +116,13 @@ kb = [
                                               [:not, [:shaves, :y, :y]]]]]]
 entails = [:not, [:exists, :x, [:barber, :x]]]
 
-@test resolution(kb, entails)
-@test !resolution(kb, [:exists, :x, [:barber, :x]])
+@test resolution(kb, entails)[1]
+@test !resolution(kb, [:exists, :x, [:barber, :x]])[1]
 
 
 kb = []
 entails = [:implies, :p, :p]
-@test resolution(kb, entails)
+@test resolution(kb, entails)[1]
 
 
 kb = [
@@ -131,20 +130,4 @@ kb = [
  [:Friend, :Peter, :Eve]
 ]
 entails = [:Friend, :Peter, :Adam]
-@test resolution(kb, entails)
-
-
-
-kb = [
- [:or, :P, :Q],
- [:not, :P]
-]
-entails = :Q
-@test resolution(kb, entails)
-
-kb = [
- [:or, [:Friend, :Peter, :Eve], [:Friend, :Peter, :Adam]],
- [:not, [:Friend, :Peter, :Eve]]
-]
-entails = [:Friend, :Peter, :Adam]
-@test resolution(kb, entails)
+@test resolution(kb, entails)[1]

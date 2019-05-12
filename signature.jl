@@ -33,7 +33,12 @@ mutable struct KnowledgeBase
 end
 
 function parse_constants(constants_data)
-    return Set(map(Constant, constants_data))
+    constants = Set{Constant}()
+    for constant in constants_data
+        constant = Constant(constant)
+        push!(constants, constant)
+    end
+    return constants
 end
 
 function parse_relations(relations_data)
@@ -59,10 +64,15 @@ function parse_functions(functions_data)
     return functions
 end
 
-function parse_signature(signature_data)
-    data = signature_data
-    constants = parse_constants(get(data, "constants", []))
-    relations = parse_relations(get(data, "relations", []))
-    functions = parse_functions(get(data, "functions", []))
+
+function get_var(data, var)
+    val = get(data, var, [])
+    return val == nothing ? [] : val
+end
+
+function parse_signature(data)
+    constants = parse_constants(get_var(data, "constants"))
+    relations = parse_relations(get_var(data, "relations"))
+    functions = parse_functions(get_var(data, "functions"))
     return Signature(constants, relations, functions)
 end

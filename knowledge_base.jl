@@ -26,7 +26,6 @@ function validate_syntax(expression::Array, signature::Signature)
     diff(x, y) = length(setdiff(x, y))
 
     constants, relations, functions, prop_functions, q_functions = syntax(expression)
-
     if diff(constants, signature.constants)     != 0; err("Constants")
     elseif diff(relations, signature.relations) != 0; err("Relations")
     elseif diff(functions, signature.functions) != 0; err("Functions")
@@ -48,8 +47,8 @@ function _syntax(expression,
                                 prop_functions, q_functions, copy(quantified_vars))
 
     @match expression begin
-        s::Symbol,
-          if !(s in quantified_vars) end            => push!(constants, Constant(string(s)))
+        s::Symbol,         # Ignore Free variables in quantifiers
+          if !(s in quantified_vars) && length(quantified_vars) == 0 end   => push!(constants, Constant(string(s)))
 
         [op::Symbol, clause...],
           if haskey(PROP_ARITY, op) end             => push!(prop_functions, PropFunction(string(op), arity(clause)))

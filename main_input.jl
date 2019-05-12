@@ -18,15 +18,21 @@ function print_title(title)
 end
 
 function expand_expression(expression)
-    return @match expression begin
+    res = @match expression begin
         s::Symbol => s
-        e::Expr   => [expand_expression(exp) for exp in e.args]
+        e::Expr   => map(expand_expression, e.args)
     end
+    return res
+end
+
+function input_to_julia(input::String)
+    input = Meta.parse(input)
+    input = expand_expression(input)
+    return input
 end
 
 # Load data
-data = YAML.load(open("input.yml"))
-kb = data["knowledge_base"]
+data = YAML.load(open("_input.yml"))
 
 # Parse Signature
 signature = parse_signature(data["signature"])
@@ -37,8 +43,8 @@ print_data(" Relations", signature.relations)
 print_data(" Functions", signature.functions)
 
 # Parse Input to Expr
-kb = map(Meta.parse, kb)
-kb = map(expand_expression, kb)
+kb = map(input_to_julia, data["knowledge_base"])
+
 
 # Parse Expr to Data Structures
 constants, relations, functions, prop_functions, q_functions = parse_syntax_from_kb(kb, signature)
@@ -51,6 +57,13 @@ print_data("Logic", [collect(prop_functions); collect(q_functions)])
 
 
 # Converting to CNF
-queries = map(Meta.parse, data["query"])
+queries = map(input_to_julia, data["query"])
+
+print_title("Input for Resolution")
+print_data("KB", kb)
 print_data("Queries", queries)
-answers = [resolution(kb, query) for query in queries]
+
+print_title("Entailment for Queries")
+answers = [resolution(kb, query)[1] for query in queries]
+query_answers = map(qa -> string(qa[1]) * "  ⊨ " * string(qa[2]), zip(queries, answers))
+print_data("", query_answers)
