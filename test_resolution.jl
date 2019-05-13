@@ -184,3 +184,11 @@ constants = set(:Peter, :Eve, :Adam)
 
 @test resolution(kb, [:Friend, :Peter, :Adam], constants)[1]
 @test !resolution(kb, :Dana, constants)[1]
+
+kb = [
+ [:or, [:Friend, :Peter, :Eve], [:Friend, :Peter, :Adam]],
+ [:not, [:Friend, :Peter, :Eve]]
+]
+entails = :Dana #[:Friend, :Peter, :Adam]
+constants = set(:Peter, :Eve, :Adam)
+@test !resolution(kb, entails, constants)[1]

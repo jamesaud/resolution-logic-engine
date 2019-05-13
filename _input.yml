@@ -5,6 +5,10 @@ signature:
     - Eve
     - Eva
 
+  functions:
+    mother:
+      name: Mother!
+      arity: 1
   relations:
     friend:
       name: Friend
@@ -15,10 +19,9 @@ signature:
 
 
 knowledge_base:
-    - "[and, [Friend, Adam, Eve], [Friend, Eve, Adam]]"
     - "[or, [Friend, Peter, Eve], [Friend, Peter, Adam]]"
     - "[not, [Friend, Peter, Eve]]"
 
 query:
   - "Dana"
-  #- "[Friend, Peter, Adam]"
+  - "[Friend, Peter, Adam]"

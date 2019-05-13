@@ -19,5 +19,3 @@ knowledge_base:
 query:
     - "[not, [exists, x, [barber!, x]]]"
     - "[exists, x, [barber!, x]]"
-    - "[implies, p, q]"
-    - "[or, p, [not, p]]"

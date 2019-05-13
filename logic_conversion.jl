@@ -298,12 +298,6 @@ function _resolution_rule(clauses::Set, constants::Set)
             if _has_complementary_literals(c1, c2)
                 sentence = _resolve(c1, c2)
                 if !_has_complementary_literals(sentence, sentence)
-                    if isempty(sentence)
-                        print_data("Stage", clauses)
-                        println("Resolved to empty set")
-                        println(c1)
-                        println(c2)
-                    end
                     push!(S, sentence)
                 end
             end
@@ -468,7 +462,7 @@ function resolution(kb::Array, query, constants::Set)
     kb = map(conjunctive_normal_form, kb) # Good
     kb = map(clause_form, kb)  # Good
     kb = reduce(union, kb)
-    empty_set_found, S = resolve(kb)   # If the empty set is found, the query is entailed!
+    empty_set_found, S = resolve(kb, constants)   # If the empty set is found, the query is entailed!
     return empty_set_found, S
 end
 

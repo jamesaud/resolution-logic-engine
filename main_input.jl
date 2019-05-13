@@ -19,20 +19,19 @@ end
 
 function expand_expression(expression)
     res = @match expression begin
-        s::Symbol => s
-        e::Expr   => map(expand_expression, e.args)
+        s::String => Symbol(s)
+        exp::Array   => map(expand_expression, exp)
     end
     return res
 end
 
-function input_to_julia(input::String)
-    input = Meta.parse(input)
+function input_to_julia(input::Array)
     input = expand_expression(input)
     return input
 end
 
 # Load data
-data = YAML.load(open("_input.yml"))
+data = YAML.load(open("___input.yml"))
 
 # Parse Signature
 signature = parse_signature(data["signature"])
@@ -44,7 +43,7 @@ print_data(" Functions", signature.functions)
 
 # Parse Input to Expr
 kb = map(input_to_julia, data["knowledge_base"])
-
+println(kb)
 
 # Parse Expr to Data Structures
 constants, relations, functions, prop_functions, q_functions = parse_syntax_from_kb(kb, signature)
@@ -61,9 +60,11 @@ queries = map(input_to_julia, data["query"])
 
 print_title("Input for Resolution")
 print_data("KB", kb)
+println()
 print_data("Queries", queries)
 
 print_title("Entailment for Queries")
-answers = [resolution(kb, query, signature.constants)[1] for query in queries]
+constants = Set([Symbol(constant.name) for constant in signature.constants])
+answers = [resolution(kb, query, constants)[1] for query in queries]
 query_answers = map(qa -> string(qa[1]) * "  ⊨ " * string(qa[2]), zip(queries, answers))
 print_data("", query_answers)
