@@ -19,9 +19,9 @@ signature:
 
 
 knowledge_base:
-    - "[or, [Friend, Peter, Eve], [Friend, Peter, Adam]]"
-    - "[not, [Friend, Peter, Eve]]"
+    - [or, [Friend, Peter, Eve], [Friend, Peter, Adam]]
+    - [not, [Friend, Peter, Eve]]
 
 query:
-  - "Dana"
-  - "[Friend, Peter, Adam]"
+  - Dana
+  - [Friend, Peter, Adam]

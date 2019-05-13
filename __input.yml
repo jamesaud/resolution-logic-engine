@@ -6,9 +6,9 @@ signature:
   functions:
 
 knowledge_base:
-    - "[and, P, Q]"
+    - [and, P, Q]
 
 query:
-    - "P"
-    - "Q"
-    - "Z"
+    - P
+    - Q
+    - Z

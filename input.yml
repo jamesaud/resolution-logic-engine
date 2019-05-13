@@ -14,8 +14,8 @@ signature:
 
 
 knowledge_base:
-    - "[all, y, [implies, [barber!, y], [double_implies, [shaves, x, y], [not, [shaves, y, y]]]]]"
+    - [all, y, [implies, [barber!, y], [double_implies, [shaves, x, y], [not, [shaves, y, y]]]]]
 
 query:
-    - "[not, [exists, x, [barber!, x]]]"
-    - "[exists, x, [barber!, x]]"
+    - [not, [exists, x, [barber!, x]]]
+    - [exists, x, [barber!, x]]

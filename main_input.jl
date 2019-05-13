@@ -25,7 +25,7 @@ function expand_expression(expression)
     return res
 end
 
-function input_to_julia(input::Array)
+function input_to_julia(input)
     input = expand_expression(input)
     return input
 end
@@ -43,7 +43,6 @@ print_data(" Functions", signature.functions)
 
 # Parse Input to Expr
 kb = map(input_to_julia, data["knowledge_base"])
-println(kb)
 
 # Parse Expr to Data Structures
 constants, relations, functions, prop_functions, q_functions = parse_syntax_from_kb(kb, signature)
