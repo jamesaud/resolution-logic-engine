@@ -1,6 +1,7 @@
 using Test
 include("mgu.jl")
 
+set(exp...) = Set(exp)
 
 F = Symbol("f()")
 G = Symbol("g()")
@@ -36,3 +37,8 @@ r, s = unify(z1, z2)
 @test r == res && s == subs
 @test_throws ArgumentError unify([:P :x], [:Q :x])                  # Impossible to unify
 @test_throws ArgumentError unify([:Q, :y, :y], [:Q, :y, [F, :y]])   # Occurs check condition
+
+constants = set(:Peter)
+exp1 = [:Friend, :Peter, :z]
+exp2 = [:Friend, :x, :y]
+@test unify(exp1, exp2, constants) == ([:Friend, :Peter, :y], Dict(:z=>:y,:x=>:Peter))

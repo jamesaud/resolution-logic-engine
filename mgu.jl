@@ -34,22 +34,35 @@ function _occurs_in(symbol::Symbol, fx)
     end
 end
 
-function _unify(e1, e2, substitutions::Dict)
+function _unify(e1, e2, constants)
+    return _unify(e1, e2, Dict(), constants)
+end
+
+function _unify(e1, e2, substitutions::Dict, constants::Set)
     @assert length(e1) == length(e2) "Arguments should be the same length"
     err() = throw(ArgumentError("Not Unifiable"))
 
     find_subs(pair) = @match pair begin
-        [s::Symbol, t::Symbol]                => [s, t]    # Replace symbol with symbol
+                                                    # Constants shouldn't be replaced by free variables
+        [s::Symbol, t::Symbol]                => begin
+                                                    if s in constants && t in constants
+                                                        err()
+                                                    elseif (s in constants)
+                                                        [t, s]
+                                                    elseif (t in constants)
+                                                        [s, t]    # Replace symbol with symbol
+                                                    else
+                                                        [s, t]
+                                                    end
+                                                  end
         [s::Symbol, fx] || [fx, s::Symbol]    => begin
-                                                    if _occurs_in(s, fx); err() end
+                                                    if _occurs_in(s, fx); err() end  # Occurs check
                                                     [s, fx]
                                                  end
         [ [F, x], [G, y] ]                    => find_subs([x, y])  # If they are both functions, go inside
         [ [F, x], [G, x] ]                    => err()
-        [[], _] || [_, []] || _               => err()  # TODO: Changed _
-
+        [[], _] || [_, []]                    => err()
     end
-
 
     for i = 1:length(e1)
         pair = [e1[i], e2[i]]
@@ -60,18 +73,20 @@ function _unify(e1, e2, substitutions::Dict)
             substitutions[x] = y
         end
     end
-
     return e1, e2, substitutions
 end
 
-
-function unify(e1, e2)
+function unify(e1, e2, constants::Set)
     if !check_predicates_match([e1, e2])
         throw(ArgumentError("Predicates don't match"))
     end
     predicate = e1[1]
     e1, e2 = e1[2:end], e2[2:end]
-    e1, e2, subs = _unify(e1, e2, Dict())
+    e1, e2, subs = _unify(e1, e2, constants)
     @assert e1 == e2 "Input is likely invalid"    # Actually unecessary, as exception should be raised in _unify
     return [predicate; e1], subs
+end
+
+function unify(e1, e2)
+    return unify(e1, e2, Set())
 end

@@ -9,6 +9,7 @@ query = [:not, [:exists, :x, [:barber, :x]]]
 
 entailed, clauses = resolution(kb, query)
 clauses = Set(Set{Any}(c) for c in clauses)
+
 if entailed
       println("The query is entailed (by contradiction of the negated query).")
       println()

@@ -64,6 +64,6 @@ print_data("KB", kb)
 print_data("Queries", queries)
 
 print_title("Entailment for Queries")
-answers = [resolution(kb, query)[1] for query in queries]
+answers = [resolution(kb, query, signature.constants)[1] for query in queries]
 query_answers = map(qa -> string(qa[1]) * "  ⊨ " * string(qa[2]), zip(queries, answers))
 print_data("", query_answers)

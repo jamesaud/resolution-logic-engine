@@ -249,6 +249,23 @@ function _remove_literals_and_negations(literals::Set, clause::Set)
     return setdiff(clause, all_literals)
 end
 
+function remove_tautologies(clause::Set)
+    clause = copy(clause)
+    for expr in clause
+        e, negation_in_c = @match expr begin
+            [:not, e] => (e, e in clause)
+            e         => (e, [:not, e] in clause)
+        end
+        if negation_in_c
+            delete!(clause, e)
+            delete!(clause, [:not, e])
+        end
+    end
+    return clause
+end
+
+
+
 function _resolve(clause1::Set, clause2::Set)
     literals = _complementary_literals(clause1, clause2)
     clause = union(clause1, clause2)
@@ -258,20 +275,35 @@ end
 
 # Produces all possible new clauses using the resoltion rule
 function _resolution_rule(clauses::Set)
+    return _resolution_rule(clauses::Set, Set())
+end
+
+# Generates new clauses from the clause set and returns the new clauses
+function _resolution_rule(clauses::Set, constants::Set)
     S = Set()
     for c1 in clauses
         for c2 in clauses
-            try
-                if _has_complementary_predicates(c1, c2)
-                    c1, c2, subs = unify_clause_predicates(c1, c2)
+            if c1 == c2 continue end
+            if _has_complementary_predicates(c1, c2)
+                try
+                    c1, c2, subs = unify_clause_predicates(c1, c2, constants)
+                catch exception
+                    continue
                 end
-            catch exception
-                continue
             end
+
+            c1 = remove_tautologies(c1)
+            c2 = remove_tautologies(c2)
+
             if _has_complementary_literals(c1, c2)
                 sentence = _resolve(c1, c2)
-
                 if !_has_complementary_literals(sentence, sentence)
+                    if isempty(sentence)
+                        print_data("Stage", clauses)
+                        println("Resolved to empty set")
+                        println(c1)
+                        println(c2)
+                    end
                     push!(S, sentence)
                 end
             end
@@ -341,21 +373,31 @@ function _replace_unbounded_variable(clause::Set, var, new_var)
     return Set([replace(expr) for expr in clause])
 end
 
-# Finds predicate in CNF clause and unifies based on it. Returns clauses with predicate replaced with the unification
 function unify_clause_predicates(clause1::Set, clause2::Set)
+    return unify_clause_predicates(clause1, clause2, Set())
+end
+
+# Finds predicate in CNF clause and unifies based on it. Returns clauses with predicate replaced with the unification
+function unify_clause_predicates(clause1::Set, clause2::Set, constants::Set)
     extract_predicate_expression(expr) = @match expr begin
         [:not, [p, e...]] => [p, e...]
         [p, e...]         => [p, e...]
     end
 
-    replace(expr, predicate, new_expr) = begin
-        expr = @match expr begin
-            [:not, [p, _...]] => p == predicate ? [:not, new_expr] : expr
-            [p, _...]         => p == predicate ? new_expr : expr
-            _                 => expr
+    replace_in_clause(clause, expr, new_exp) = begin
+        negated = @match expr begin
+            [:not, _]  => true
+            _          => false
         end
-        return expr
 
+        nclause = []
+        for e in clause
+            if e == expr
+                e = negated ? [:not, new_exp] : new_exp
+            end
+            push!(nclause, e)
+        end
+        return Set(nclause)
     end
 
     c1_expressions = _complementary_predicate_expressions(clause1, clause2)
@@ -363,21 +405,28 @@ function unify_clause_predicates(clause1::Set, clause2::Set)
     c1_expressions = map(extract_predicate_expression, c1_expressions)
     c2_expressions = map(extract_predicate_expression, c2_expressions)
 
-    unifications = [unify(e1, e2) for (e1, e2) in zip(c1_expressions, c2_expressions)]
-    unifications, subs = collect(zip(unifications...))
-    subs = reduce(merge, subs)
-    predicates = map(_extract_predicate, c1_expressions)
-
-
-    c1, c2 = clause1, clause2
-    for (pred, unification) in zip(predicates, unifications)
-        c1 = [replace(expr, pred, unification) for expr in c1]
-        c2 = [replace(expr, pred, unification) for expr in c2]
+    # Unify the first predicate only, subsequent ones will be unified later
+    function unification()
+        for e1 in c1_expressions
+            for e2 in c2_expressions
+                try
+                    unification, subs = unify(e1, e2, constants)
+                    return e1, e2, unification, subs
+                catch exception
+                end
+            end
+        end
+        throw(ArgumentError("Couldn't Unify Expressions"))
     end
 
-    # Now unbound variables in other predicates need to replaced
-    c1, c2 = Set(c1), Set(c2)
+    e1, e2, unification, subs = unification()
+    predicate = _extract_predicate(unification)
 
+    c1, c2 = clause1, clause2
+    c1 = replace_in_clause(c1, e1, unification)
+    c2 = replace_in_clause(c2, e2, unification)
+
+    # Now unbound variables in other predicates need to replaced
     for (var, new_var) in subs
         c1 = _replace_unbounded_variable(c1, var, new_var)
         c2 = _replace_unbounded_variable(c2, var, new_var)
@@ -389,14 +438,19 @@ end
 
 # Returns all new possible clauses that are entailed, return true if contradiction found
 function resolve(clauses::Set)
+    return resolve(clauses::Set, Set())
+end
+
+function resolve(clauses::Set, constants::Set)
+    _S = Set()
     S = clauses
-    _prev = Set()
+
     contradiction = false
-    # Run until no new clauses are found
-    while _prev != S
-        _prev = S
-        S = union(S, _resolution_rule(S))
-        if any([isempty(c) for c in S])
+    while _S != S  # If no new clauses found, no contradiction found
+        _S = S
+        S = union(S,  _resolution_rule(S, constants))
+
+        if any([isempty(e) for e in S])  # If empty set in unification, then contradiction found
             contradiction = true
             break
         end
@@ -406,21 +460,18 @@ end
 
 # Returns true if the query is entailed from the knowledge base
 function resolution(kb::Array, query)
+    return resolution(kb, query, Set())
+end
+
+function resolution(kb::Array, query, constants::Set)
     kb = [kb; [[:not, query]]]
-    kb = map(conjunctive_normal_form, kb)
-    print_data("KB", kb)
-    kb = map(clause_form, kb)
+    kb = map(conjunctive_normal_form, kb) # Good
+    kb = map(clause_form, kb)  # Good
     kb = reduce(union, kb)
     empty_set_found, S = resolve(kb)   # If the empty set is found, the query is entailed!
     return empty_set_found, S
 end
 
-function resolution_steps(kb::Array)
-    kb = map(conjunctive_normal_form, kb)
-    kb = map(clause_form, kb)
-    kb = reduce(union, kb)
-    return resolve(kb)
-end
 
 function print_data(title, data)
     println(" ", title, ":")

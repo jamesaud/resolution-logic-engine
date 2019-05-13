@@ -63,6 +63,44 @@ c1, c2, subs = unify_clause_predicates(set([:not, [:Loves, :x, :z]], [:Hates, :z
 @test subs == Dict(:z=>:y)
 
 
+clause1 = set([:not, [:Friend, :Peter, :z]])
+clause2 = set([:Friend, :x, :y],  [:Enemy, :x, :z])
+constants = set(:Peter)
+
+c1, c2, subs = unify_clause_predicates(clause1, clause2, constants)
+@test c1 == set([:not, [:Friend, :Peter, :y]])
+@test c2 == set([:Friend, :Peter, :y], [:Enemy, :Peter, :y])
+@test subs == Dict(:z=>:y, :x=>:Peter)
+
+c1, c2, subs = unify_clause_predicates(clause2, clause1, constants)
+@test c2 == set([:not, [:Friend, :Peter, :z]])
+@test c1 == set([:Friend, :Peter, :z], [:Enemy, :Peter, :z])
+@test subs == Dict(:y=>:z, :x=>:Peter)
+
+
+clause1 = set([:Friend, :Peter, :Eve], [:Friend, :Peter, :Adam])
+clause2 = set([:not, [:Friend, :Peter, :Eve]], [:not, [:Friend, :Peter, :Adam]])
+sentence = union(clause1, clause2)
+
+
+@test _has_complementary_literals(clause1, clause2)
+@test _has_complementary_literals(sentence, sentence)
+
+clause1 = set([:not, Symbol[:Friend, :x, :y]])
+clause2 = set([:Friend, :x, :z], [:Friend, :a, :y])
+
+c1, c2, subs = unify_clause_predicates(clause1, clause2)
+@test c1 == set([:not, Symbol[:Friend, :x, :z]])
+@test c2 == set([:Friend, :x, :z], [:Friend, :a, :z])
+
+@test remove_tautologies(set(:a, [:not, :a])) == set()
+@test remove_tautologies(set(:a, [:not, :b])) == set(:a, [:not, :b])
+
+c1 = set([:not, [:Friend, :Peter, :Eve]], [:Friend, :Peter, :Eve])
+@test remove_tautologies(c1) == set()
+
+
+
 # TESTING RESOLUTION
 c1 = set(:a, :b, [:not, :c])
 c2 = set(:c)
@@ -79,8 +117,10 @@ clauses = set(
       set(:a, :b),
       set([:not, :a])
 )
+constants = set(:a, :b, :c)
 entailed = set(set(:b), set(:c), set(:a, :c))
-@test resolve(clauses) == (false, union(clauses, entailed))
+
+@test resolve(clauses, constants) == (false, union(clauses, entailed))
 @test resolve(set(set(:a), set(:b))) == (false, set(set(:a), set(:b)))
 @test resolve(set()) == (false, set())
 
@@ -90,6 +130,17 @@ clauses = set(
 )
 entailed = set(set([:Q, :a]), set([:Q, :x]))
 @test resolve(clauses) == (false, union(clauses, entailed))
+
+
+clauses = set(
+      set(:a, :b),
+      set([:not, :a]),
+      set([:not, :b], :c),
+)
+# Truth: b and c are true
+constants = set(:a, :b, :c)
+contradiction = set(set(:b), set(:c), set(:a, :c))
+contradiction, S = resolve(clauses, constants)
 
 # Test Resolution
 kb = [
@@ -129,5 +180,7 @@ kb = [
  [:or, [:not, [:Friend, :Peter, :Eve]], [:Friend, :Peter, :Adam]],
  [:Friend, :Peter, :Eve]
 ]
-entails = [:Friend, :Peter, :Adam]
-@test resolution(kb, entails)[1]
+constants = set(:Peter, :Eve, :Adam)
+
+@test resolution(kb, [:Friend, :Peter, :Adam], constants)[1]
+@test !resolution(kb, :Dana, constants)[1]
