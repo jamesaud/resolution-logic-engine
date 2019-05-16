@@ -72,8 +72,11 @@ query:
 The input must be in a file called `input.yml` and contain a `knowledge_base`, `query`, and valid `signature`. 
 
 For the signature:
+
     - constants: shown above, separate with dashes on new lines
+    
     - functions: MUST END WITH AN ! to be parsed correctly. So `Mother` is not a valid function name, but `Mother!` is! Must also provide name and arity.
+    
     - relations: Must provide name and arity, and not end in a !. 
     
 
