@@ -71,12 +71,13 @@ query:
 
 The language is in prefix notation, so that one can write the statement:
 
-[Predicate, x, ...]
+`[Predicate, x, ...]`
 
 The language requires statements to be written in lists. In native Julia, this should be a list of symbols, but it is easier to provide in a different .yml format.
 
 In Julia: 
-[:Friend, :x, :y]
+
+`[:Friend, :x, :y]`
 
 ## Formatting the data
 
