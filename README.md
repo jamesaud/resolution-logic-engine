@@ -131,6 +131,20 @@ This will output the following:
 
 ![alt output](output.png)
 
+Each query is specified whether it is true or false.
+
+## Viewing resolution steps
+The resolution steps by default are not shown. Running the following will shown an example of the steps taken to find the query:
+
+`julia main_resolution.jl` 
+
+Will output:
+
+![alt output](output2.png)
+
+The statements are in clause form (a set of sets), and can be deduced how the empty set was reach by reading through the clauses from top to bottom.
+
+
 ## Errors
 If the input.yml is not formatted correctly (lists are missing brackets, spacing incorrect, etc.) there will be errors that the program cannot catch. 
 
