@@ -125,4 +125,7 @@ Once you have the data set up in an input.yml file, you're ready to run the engi
 
 `julia main_input.jl`
 
-This will output the following 
+This will output the following:
+
+![alt output](output.jpg)
+
