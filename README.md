@@ -127,5 +127,5 @@ Once you have the data set up in an input.yml file, you're ready to run the engi
 
 This will output the following:
 
-![alt output](output.jpg)
+![alt output](output.png)
 
