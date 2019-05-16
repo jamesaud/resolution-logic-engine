@@ -67,11 +67,25 @@ query:
   - [Friend, Peter, Adam]
 ```
 
-## Running the code
+## Formatting the data
 
 The input must be in a file called `input.yml` and contain a `knowledge_base`, `query`, and valid `signature`. 
 
-For the signature:
+### Data Format
+Logical expressions are formated as lists, even in the native julia code. In the input.yml, the any first order logic expression must either be:
+
+- a constant, which is not surrounded by brackets in a list.
+- an expression, which is a list.
+
+The following is valid:
+- Dana
+
+The following is invalid
+- [Dana]
+
+
+
+### For the signature:
 
 - constants: shown above, separate with dashes on new lines
     
@@ -80,4 +94,6 @@ For the signature:
 - relations: Must provide name and arity, and not end in a !. 
     
 
+### For the query:
+Must provide a list of queries separated with a - on new lines. 
 
