@@ -36,3 +36,45 @@ query:
   - [not, [exists, x, [barber, x]]]
   - [exists, x, [barber, x]]
 ```
+
+Another example:
+```
+signature:
+  constants:
+    - Peter
+    - Adam
+    - Eve
+    - Eva
+
+  functions:
+    mother:
+      name: Mother!
+      arity: 1
+  relations:
+    friend:
+      name: Friend
+      arity: 2
+    enemy:
+      name: Enemy
+      arity: 2
+
+knowledge_base:
+    - [or, [Friend, Peter, Eve], [Friend, Peter, Adam]]
+    - [not, [Friend, Peter, Eve]]
+
+query:
+  - Dana
+  - [Friend, Peter, Adam]
+```
+
+## Running the code
+
+The input must be in a file called `input.yml` and contain a `knowledge_base`, `query`, and valid `signature`. 
+
+For the signature:
+    - constants: shown above, separate with dashes on new lines
+    - functions: MUST END WITH AN ! to be parsed correctly. So `Mother` is not a valid function name, but `Mother!` is! Must also provide name and arity.
+    - relations: Must provide name and arity, and not end in a !. 
+    
+
+
