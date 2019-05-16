@@ -12,17 +12,9 @@ signature:
       arity: 1
 
 
-
 knowledge_base:
-    - [all, x, [all, y, [implies, [and, [barber!, x],
-                                        [not, [shaves, y, y]]],
-                                  [shaves, x, y]]]]
-                                  
-    - [not, [exists, x, [exists, y, [and, [and, [barber!, x],
-                                                [shaves, y, y]],
-                                          [shaves, x, y]]]]]
-
-
+    - [all, y, [implies, [barber!, y], [double_implies, [shaves, x, y], [not, [shaves, y, y]]]]]
 
 query:
     - [not, [exists, x, [barber!, x]]]
+    - [exists, x, [barber!, x]]

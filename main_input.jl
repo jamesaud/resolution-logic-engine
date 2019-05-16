@@ -31,7 +31,7 @@ function input_to_julia(input)
 end
 
 # Load data
-data = YAML.load(open("___input.yml"))
+data = YAML.load(open("input.yml"))
 
 # Parse Signature
 signature = parse_signature(data["signature"])

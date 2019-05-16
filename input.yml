@@ -1,21 +1,28 @@
 signature:
   constants:
 
+  functions:
+
   relations:
     shaves:
       name: shaves
       arity: 2
-
-  functions:
     barber:
-      name: barber!
+      name: barber
       arity: 1
 
 
-
 knowledge_base:
-    - [all, y, [implies, [barber!, y], [double_implies, [shaves, x, y], [not, [shaves, y, y]]]]]
+    - [all, x, [all, y, [implies, [and, [barber, x],
+                                        [not, [shaves, y, y]]],
+                                  [shaves, x, y]]]]
+
+    - [not, [exists, x, [exists, y, [and, [and, [barber, x],
+                                                [shaves, y, y]],
+                                          [shaves, x, y]]]]]
+
+
 
 query:
-    - [not, [exists, x, [barber!, x]]]
-    - [exists, x, [barber!, x]]
+  - [not, [exists, x, [barber, x]]]
+  - [exists, x, [barber, x]]

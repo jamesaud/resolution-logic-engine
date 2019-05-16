@@ -19,6 +19,7 @@ signature:
 
 
 knowledge_base:
+    #- [equal, [Mother!, Peter], Eve] syntax will be parsed 
     - [or, [Friend, Peter, Eve], [Friend, Peter, Adam]]
     - [not, [Friend, Peter, Eve]]
 
