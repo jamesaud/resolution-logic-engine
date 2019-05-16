@@ -13,7 +13,7 @@ The language requires statements to be written in lists. In native Julia, this s
 
 In Julia: 
 
-`[:Friend, :x, :y]`
+`[:and, [:Friend, :x, :y], [:Friend, :y, :x]]`
 
 
 ## Input format
