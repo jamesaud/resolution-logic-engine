@@ -129,3 +129,34 @@ This will output the following:
 
 ![alt output](output.png)
 
+## Errors
+If the input.yml is not formatted correctly (lists are missing brackets, spacing incorrect, etc.) there will be errors that the program cannot catch. 
+
+If the file is formatted properly, errors in the knowledge base deduced from the signature will be presented to the user. This can happen if constants, arity, etc. are incorrect.
+
+## Unit Tests
+This code is near 100% unit tested. Simply run:
+
+```
+julia test_logic_conversion.jl
+
+julia test_mgu.jl
+
+julia test_resolution.jl
+```
+
+
+## Assignment Specific Remarks
+Each part of the assignment is broken up to it's own file to see the results if necessary. This will show output for Conjunctive normal form, most general unifier, and resolution.
+
+To run the separate parts:
+
+```
+julia main_cnf.yml
+
+julia main_mgu.yml
+
+julia main_resolution.yml
+```
+
+
