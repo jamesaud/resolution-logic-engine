@@ -2,6 +2,20 @@
 
 This algorithm parses first order logic statements in a knowledge base, takes a query, and gives an answer to that query using resolution.
 
+
+## Custom Language Explanation
+
+The language is in prefix notation, so that one can write the statement:
+
+`[Predicate, x, ...]`
+
+The language requires statements to be written in lists. In native Julia, this should be a list of symbols, but it is easier to provide in a different .yml format.
+
+In Julia: 
+
+`[:Friend, :x, :y]`
+
+
 ## Input format
 
 Input can be directly as Julia code, but is much easier using the .yml format. 
@@ -67,19 +81,7 @@ query:
   - [Friend, Peter, Adam]
 ```
 
-## Custom Language Explanation
-
-The language is in prefix notation, so that one can write the statement:
-
-`[Predicate, x, ...]`
-
-The language requires statements to be written in lists. In native Julia, this should be a list of symbols, but it is easier to provide in a different .yml format.
-
-In Julia: 
-
-`[:Friend, :x, :y]`
-
-## Formatting the data
+### Formatting the data
 
 The input must be in a file called `input.yml` and contain a `knowledge_base`, `query`, and valid `signature`. 
 
@@ -118,3 +120,9 @@ Other:
 ### For the query:
 Must provide a list of queries separated with a - on new lines. 
 
+## Running the Code
+Once you have the data set up in an input.yml file, you're ready to run the engine.  The command is:
+
+`julia main_input.jl`
+
+This will output the following 
