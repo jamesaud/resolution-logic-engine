@@ -86,10 +86,10 @@ The following is invalid
 ### Valid operators:
 
 Predicate Logic:
-- and, or, not, implies, double_implies
+- `and, or, not, implies, double_implies`
 
 Quantifiers:
-- exists, all
+- `exists, all`
 
 Other:
 - equal   (I was planning on implementing something like [equal, [Mother!, John], Eve], so the engine could directly look it up but didn't get around to adding this optimization.
