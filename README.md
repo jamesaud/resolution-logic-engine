@@ -93,9 +93,11 @@ Logical expressions are formated as lists, even in the native julia code. In the
 
 The following is valid:
 - Dana
+- [Friend, James, John]
 
 The following is invalid
 - [Dana]
+- Friend, James, John
 
 ### Valid operators:
 
