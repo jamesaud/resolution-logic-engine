@@ -6,7 +6,7 @@ This algorithm parses first order logic statements in a knowledge base, takes a 
 
 Input can be directly as Julia code, but is much easier using the .yml format. 
 
-Please take a look at the input.yml file to see how to formulate the knowledge base, query, and signature.
+Please take a look at the input.yml file to see how to formulate the knowledge base, query, and signature. Here is an example of an input.yml file:
 
 ```
 signature:
