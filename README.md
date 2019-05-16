@@ -67,6 +67,17 @@ query:
   - [Friend, Peter, Adam]
 ```
 
+## Custom Language Explanation
+
+The language is in prefix notation, so that one can write the statement:
+
+[Predicate, x, ...]
+
+The language requires statements to be written in lists. In native Julia, this should be a list of symbols, but it is easier to provide in a different .yml format.
+
+In Julia: 
+[:Friend, :x, :y]
+
 ## Formatting the data
 
 The input must be in a file called `input.yml` and contain a `knowledge_base`, `query`, and valid `signature`. 
@@ -92,7 +103,7 @@ Quantifiers:
 - `exists, all`
 
 Other:
-- equal   (I was planning on implementing something like [equal, [Mother!, John], Eve], so the engine could directly look it up but didn't get around to adding this optimization.
+- `equal`   (I was planning on implementing something like [equal, [Mother!, John], Eve], so the engine could directly look it up but didn't get around to adding this optimization.
 
 ### For the signature:
 
