@@ -1,6 +1,6 @@
-# Logic AI Engine
+# Resolution Logic AI Engine
 
-This algorithm parses first order logic statements in a knowledge base, takes a query, and gives an answer to that query using resolution.
+This algorithm parses first order logic statements in a knowledge base, takes a query, and gives an answer to that query using resolution. This is similar to how Prolog works.
 
 
 ## Custom Language Explanation
